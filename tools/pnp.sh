@@ -100,14 +100,6 @@ def why(s):
 def refuse(gid, reason):
     print("REFUSED: the statement the desk sent is not plainly a Lean term (%s). Nothing was written and nothing was built." % reason, file=sys.stderr)
     print("Tell your owner. Give the step back: tools/pnp.sh release %s other" % gid, file=sys.stderr); sys.exit(2)
-if d.get("task") == "explore" and isinstance(d.get("seed"), dict) and isinstance(d.get("lease"), dict):
-    sid = "explore-" + re.sub(r"[^A-Za-z0-9._-]", "", str(d["seed"].get("id", "")))[:80]
-    json.dump(d, open(os.path.join(state, sid + ".json"), "w"), indent=1)
-    dr = d.get("direction") or {}
-    print("EXPLORE   ", clean(dr.get("title", "")), "|", clean(dr.get("why", "")))
-    print("SEED      ", clean(d["seed"].get("statement") or d["seed"].get("title") or ""))
-    print("NOTE      ", clean(d.get("note") or ""))
-    print("LEASE     ", clean(d["lease"].get("id", "")), "| renew every 5 minutes: tools/pnp.sh beat", sid); sys.exit(0)
 g = d.get("gap")
 if not g:
     print(clean(d.get("note") or d.get("error") or "no step right now; ask again in a few minutes")); sys.exit(0)
@@ -126,6 +118,8 @@ if not os.path.exists(full):
     with open(full, "w") as f:
         f.write("import Mathlib\n" + "".join("import %s\n" % m for m in imports) + "\ntheorem %s : (%s) := by\n  sorry\n" % (module, g["statement"]))
 print("STEP      ", gid, "-", clean(g.get("title", "")))
+if d.get("task") == "explore" and isinstance(d.get("direction"), dict):
+    print("EXPLORE   ", clean(d["direction"].get("name", "")), "|", clean(d["direction"].get("plain", "")))
 print("FILE      ", path, "(skeleton written; replace `sorry`, change nothing in the statement)")
 print("WHY       ", clean(g.get("unlocks") or ""))
 for k, label in (("context", "KNOWN"), ("sketch", "SKETCH"), ("refutation", "REFUTATION"), ("shard_spec", "RANGE RULE")):
